@@ -3,15 +3,14 @@ import React, { useState, useMemo } from 'react';
 // --- MOCK DATA (Based on provided Database Schema) ---
 const MOCK_PRODUCTS = [
   { id: 1, name: "M&M's Peanut Chocolate Candies", category: "Snacks", weight: "125g", image: "https://placehold.co/200x200/f59e0b/ffffff?text=M%26Ms", barcode: "5000159461122" },
-  { id: 2, name: "Red Bull Energy Drink", category: "Beverages", volume: "250ml", image: "https://placehold.co/200x200/3b82f6/ffffff?text=Red+Bull", barcode: "9002490100070" },
+  { id: 2, name: "Relentless Origin Energy Drink", category: "Beverages", volume: "500ml", image: "https://placehold.co/200x200/3b82f6/ffffff?text=Relentless", barcode: "5060166690000" },
   { id: 3, name: "Meal Deal: Sandwich + Snack + Drink", category: "Meal Deals", image: "https://placehold.co/200x200/10b981/ffffff?text=Meal+Deal", barcode: "MEALDEAL1" }
 ];
 
 const MOCK_BRANCHES = [
   { id: 101, storeName: "Sainsbury's Local", branchName: "Buchanan Bus Station", distance: "0.1 mi", lat: 55.864, lng: -4.249, hours: "07:00 - 23:00" },
   { id: 102, storeName: "Sainsbury's", branchName: "Buchanan Galleries", distance: "0.4 mi", lat: 55.862, lng: -4.253, hours: "08:00 - 20:00" },
-  { id: 103, storeName: "Tesco Express", branchName: "Sauchiehall St", distance: "0.6 mi", lat: 55.865, lng: -4.257, hours: "06:00 - 23:00" },
-  { id: 104, storeName: "Deliveroo", branchName: "Rapid Delivery (Glasgow City)", distance: "N/A", lat: 0, lng: 0, hours: "24/7" }
+  { id: 103, storeName: "Tesco Express", branchName: "Sauchiehall St", distance: "0.6 mi", lat: 55.865, lng: -4.257, hours: "06:00 - 23:00" }
 ];
 
 const MOCK_PRODUCT_BRANCHES = [
@@ -19,10 +18,9 @@ const MOCK_PRODUCT_BRANCHES = [
   { id: 1, productId: 1, branchId: 101, price: 1.75, memberPrice: null, available: true, restock: "IN_STOCK", offers: ["Student ID: 10% Off"] },
   { id: 2, productId: 1, branchId: 102, price: 1.50, memberPrice: 1.25, available: true, restock: "IN_STOCK", offers: ["Nectar Card Price: £1.25"] },
   { id: 3, productId: 1, branchId: 103, price: 1.60, memberPrice: 1.60, available: false, restock: "TOMORROW", offers: [] },
-  { id: 4, productId: 1, branchId: 104, price: 2.20, memberPrice: null, available: true, restock: "IN_STOCK", offers: ["Deliveroo Plus: Free Delivery"] },
-  // Red Bull Prices
-  { id: 5, productId: 2, branchId: 101, price: 1.65, memberPrice: null, available: true, restock: "IN_STOCK", offers: [] },
-  { id: 6, productId: 2, branchId: 102, price: 1.45, memberPrice: null, available: true, restock: "IN_STOCK", offers: [] }
+  // Relentless Prices
+  { id: 4, productId: 2, branchId: 101, price: 1.00, memberPrice: null, available: true, restock: "IN_STOCK", offers: ["Deliveroo Plus: Free Delivery"] },
+  { id: 5, productId: 2, branchId: 102, price: 1.30, memberPrice: null, available: true, restock: "IN_STOCK", offers: [] }
 ];
 
 // --- ICONS (Inline SVGs for portability) ---
@@ -44,7 +42,7 @@ export default function App() {
       <header className="bg-indigo-600 text-white p-4 pt-8 rounded-b-2xl shadow-md z-10">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h1 className="text-xl font-bold tracking-tight">StudentSaver</h1>
+            <h1 className="text-xl font-bold tracking-tight">MJR</h1>
             <p className="text-indigo-200 text-sm flex items-center mt-1">
               <MapPinIcon /> Glasgow, G1 (Near Buchanan)
             </p>
@@ -77,16 +75,17 @@ export default function App() {
 // --- TAB COMPONENTS ---
 
 function SearchTab() {
-  const [query, setQuery] = useState('m&ms');
-  const [selectedProduct, setSelectedProduct] = useState(MOCK_PRODUCTS[0]);
+  const [query, setQuery] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   // Handle Search Input
   const handleSearch = (e) => {
     setQuery(e.target.value);
-    const found = MOCK_PRODUCTS.find(p => p.name.toLowerCase().includes(e.target.value.toLowerCase()));
-    if (found) setSelectedProduct(found);
-    else setSelectedProduct(null);
   };
+
+  const searchResults = query 
+    ? MOCK_PRODUCTS.filter(p => p.name.toLowerCase().includes(query.toLowerCase()))
+    : MOCK_PRODUCTS;
 
   return (
     <div className="animate-fade-in flex flex-col h-full">
@@ -105,11 +104,37 @@ function SearchTab() {
       </div>
 
       {selectedProduct ? (
-        <ProductComparison product={selectedProduct} />
+        <div>
+          <button 
+            onClick={() => setSelectedProduct(null)}
+            className="mb-4 text-indigo-600 text-sm font-bold flex items-center gap-1 hover:text-indigo-800"
+          >
+            ← Back to search results
+          </button>
+          <ProductComparison product={selectedProduct} />
+        </div>
       ) : (
-        <div className="text-center text-gray-500 mt-10">
-          <p>No products found for "{query}".</p>
-          <p className="text-sm mt-2">Try searching for "m&ms" or "energy drink".</p>
+        <div className="flex flex-col gap-3">
+          <h3 className="font-bold text-gray-700 mb-2">Products</h3>
+          {searchResults.length > 0 ? (
+            searchResults.map(product => (
+              <div 
+                key={product.id} 
+                onClick={() => setSelectedProduct(product)}
+                className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 cursor-pointer hover:bg-gray-50 transition-colors"
+              >
+                <img src={product.image} alt={product.name} className="w-16 h-16 rounded-lg object-cover bg-gray-100" />
+                <div>
+                  <h4 className="font-bold text-gray-800 text-sm">{product.name}</h4>
+                  <p className="text-xs text-gray-500 mt-1">{product.category}</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center text-gray-500 mt-10">
+              <p>No products found for "{query}".</p>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -221,9 +246,19 @@ function ProductComparison({ product }) {
 function ListsTab() {
   return (
     <div className="animate-fade-in">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">My Grocery Lists</h2>
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
-        <div className="flex justify-between items-center border-b pb-3 mb-3">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold text-gray-800">My Grocery Lists</h2>
+        <button className="bg-indigo-100 text-indigo-700 text-sm font-bold px-3 py-1.5 rounded-lg hover:bg-indigo-200 transition-colors">+ New List</button>
+      </div>
+      
+      <div className="flex gap-2 mb-4">
+        <span className="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-full font-bold cursor-pointer">Weekly</span>
+        <span className="bg-white border border-gray-300 text-gray-600 text-xs px-3 py-1.5 rounded-full font-bold cursor-pointer hover:bg-gray-50">One-Off</span>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4 relative">
+        <div className="absolute top-4 right-4 text-indigo-600 text-sm font-bold cursor-pointer hover:underline">Edit</div>
+        <div className="flex justify-between items-center border-b pb-3 mb-3 pr-10">
           <h3 className="font-bold text-lg">Weekly Flat Shop</h3>
           <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded font-bold">12 items</span>
         </div>
@@ -231,12 +266,23 @@ function ListsTab() {
         <p className="text-sm text-gray-600 mb-4">Compare total list price across nearby stores to find the cheapest basket.</p>
         
         <div className="space-y-3">
-          <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+          {/* Split Basket Option */}
+          <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-lg border border-indigo-200">
             <div>
-              <p className="font-bold text-green-800">Sainsbury's Buchanan</p>
-              <p className="text-xs text-green-600">0.4 miles away • 12/12 items in stock</p>
+              <p className="font-bold text-indigo-800 flex items-center gap-1">
+                Split Basket (Max Savings) <span className="text-sm">🌟</span>
+              </p>
+              <p className="text-xs text-indigo-600 mt-1">Sainsbury's Bus Station + Tesco Express</p>
             </div>
-            <p className="font-bold text-lg text-green-800">£24.50</p>
+            <p className="font-bold text-lg text-indigo-800">£22.10</p>
+          </div>
+
+          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div>
+              <p className="font-bold text-gray-800">Sainsbury's Buchanan</p>
+              <p className="text-xs text-gray-500">0.4 miles away • 12/12 items in stock</p>
+            </div>
+            <p className="font-bold text-lg text-gray-800">£24.50</p>
           </div>
           
           <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
@@ -301,14 +347,11 @@ function ReceiptsTab() {
     <div className="animate-fade-in">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Savings & Receipts</h2>
       
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-4 rounded-xl text-white shadow-lg">
-          <p className="text-indigo-100 text-sm font-medium">Weekly Savings</p>
-          <p className="text-3xl font-bold mt-1">£12.40</p>
-        </div>
-        <div className="bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
-          <p className="text-gray-500 text-sm font-medium">Points Earned</p>
-          <p className="text-3xl font-bold text-gray-800 mt-1">450</p>
+      <div className="mb-6">
+        <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-xl text-white shadow-lg text-center">
+          <p className="text-indigo-100 font-medium">Weekly Savings</p>
+          <p className="text-5xl font-bold mt-2 mb-1">£12.40</p>
+          <p className="text-xs text-indigo-200">vs. standard store prices</p>
         </div>
       </div>
 
@@ -319,20 +362,20 @@ function ReceiptsTab() {
             <p className="font-bold text-sm">Sainsbury's Buchanan</p>
             <p className="text-xs text-gray-500">Today, 14:30</p>
           </div>
-          <p className="font-bold text-green-600 text-sm">+20 points</p>
+          <p className="font-bold text-gray-800 text-sm">Verified</p>
         </div>
         <div className="p-3 flex justify-between items-center">
           <div>
             <p className="font-bold text-sm">Tesco Express</p>
             <p className="text-xs text-gray-500">Yesterday, 18:15</p>
           </div>
-          <p className="font-bold text-green-600 text-sm">+15 points</p>
+          <p className="font-bold text-gray-800 text-sm">Verified</p>
         </div>
       </div>
       
       <button className="w-full mt-6 bg-gray-900 text-white font-bold py-3 rounded-xl hover:bg-gray-800 transition-colors shadow-md flex items-center justify-center gap-2">
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-        Scan Receipt for Points
+        Scan Receipt
       </button>
     </div>
   );
